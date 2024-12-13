@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"regexp"
+	"strings"
 )
 
 func getAuthenticityToken() (string, error) {
@@ -28,6 +30,50 @@ func getAuthenticityToken() (string, error) {
 	return matches[1], nil
 }
 
+func login(authenticityToken, username, password string) error {
+	data := url.Values{}
+	data.Set("utf8", "✓")
+	data.Set("authenticity_token", authenticityToken)
+	data.Set("session[email]", username)
+	data.Set("session[password]", password)
+	data.Set("commit", "Sign In")
+
+	req, err := http.NewRequest("POST", "https://www.parentsquare.com/sessions", strings.NewReader(data.Encode()))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Origin", "https://www.parentsquare.com")
+	req.Header.Set("Pragma", "no-cache")
+	req.Header.Set("Referer", "https://www.parentsquare.com/signin")
+	req.Header.Set("Sec-CH-UA", `"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"`)
+	req.Header.Set("Sec-CH-UA-Mobile", "?0")
+	req.Header.Set("Sec-CH-UA-Platform", `"macOS"`)
+	req.Header.Set("Sec-Fetch-Dest", "document")
+	req.Header.Set("Sec-Fetch-Mode", "navigate")
+	req.Header.Set("Sec-Fetch-Site", "same-origin")
+	req.Header.Set("Sec-Fetch-User", "?1")
+	req.Header.Set("Upgrade-Insecure-Requests", "1")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("login failed with status code: %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
 func main() {
 	token, err := getAuthenticityToken()
 	if err != nil {
@@ -35,4 +81,14 @@ func main() {
 		return
 	}
 	fmt.Println("Authenticity Token:", token)
+
+	username := "your_username"
+	password := "your_password"
+
+	err = login(token, username, password)
+	if err != nil {
+		fmt.Println("Login Error:", err)
+		return
+	}
+	fmt.Println("Login successful")
 }
