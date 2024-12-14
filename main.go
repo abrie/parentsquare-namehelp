@@ -1,17 +1,3 @@
-# parentsquare-namehelp
-
-## Login Method
-
-This repository includes a method to log in to ParentSquare using an authenticity token, username, and password.
-
-### Usage
-
-1. Retrieve the authenticity token from the login page.
-2. Call the `login` method with the authenticity token, username, and password.
-
-### Example
-
-```go
 package main
 
 import (
@@ -106,4 +92,3 @@ func main() {
 	}
 	fmt.Println("Login successful")
 }
-```
