@@ -76,21 +76,6 @@ func login(authenticityToken, username, password, cookie string) error {
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Origin", "https://www.parentsquare.com")
-	req.Header.Set("Pragma", "no-cache")
-	req.Header.Set("Referer", "https://www.parentsquare.com/signin")
-	req.Header.Set("Sec-CH-UA", `"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"`)
-	req.Header.Set("Sec-CH-UA-Mobile", "?0")
-	req.Header.Set("Sec-CH-UA-Platform", `"macOS"`)
-	req.Header.Set("Sec-Fetch-Dest", "document")
-	req.Header.Set("Sec-Fetch-Mode", "navigate")
-	req.Header.Set("Sec-Fetch-Site", "same-origin")
-	req.Header.Set("Sec-Fetch-User", "?1")
-	req.Header.Set("Upgrade-Insecure-Requests", "1")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
 	req.Header.Set("Cookie", cookie)
 
 	client := &http.Client{}
@@ -108,6 +93,15 @@ func login(authenticityToken, username, password, cookie string) error {
 	if location != "" {
 		fmt.Printf("Location Header: %s\n", location)
 	}
+
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	// Print the length of response text
+	fmt.Printf("Response Text: %d\n", len(string(body)))
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("login failed with status code: %d", resp.StatusCode)
@@ -142,5 +136,4 @@ func main() {
 		fmt.Println("Login Error:", err)
 		return
 	}
-	fmt.Println("Login successful")
 }
