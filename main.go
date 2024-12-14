@@ -62,6 +62,17 @@ func getSessionData() (string, string, error) {
 	return authenticityToken, cookie, nil
 }
 
+func logCurlEquivalent(url, method string, headers map[string]string, data url.Values) {
+	curlCommand := fmt.Sprintf("curl -X %s '%s'", method, url)
+	for key, value in headers {
+		curlCommand += fmt.Sprintf(" -H '%s: %s'", key, value)
+	}
+	if data != nil {
+		curlCommand += fmt.Sprintf(" -d '%s'", data.Encode())
+	}
+	fmt.Println("Curl Equivalent:", curlCommand)
+}
+
 func login(authenticityToken, username, password, cookie string) error {
 	data := url.Values{}
 	data.Set("utf8", "✓")
@@ -69,6 +80,13 @@ func login(authenticityToken, username, password, cookie string) error {
 	data.Set("session[email]", username)
 	data.Set("session[password]", password)
 	data.Set("commit", "Sign In")
+
+	headers := map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+		"Cookie": cookie,
+	}
+
+	logCurlEquivalent("https://www.parentsquare.com/sessions", "POST", headers, data)
 
 	req, err := http.NewRequest("POST", "https://www.parentsquare.com/sessions", strings.NewReader(data.Encode()))
 	if err != nil {
