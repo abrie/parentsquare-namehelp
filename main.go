@@ -1,13 +1,39 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 )
+
+type Credentials struct {
+	Login struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	} `json:"login"`
+}
+
+func parseCredentials(filename string) (string, string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return "", "", err
+	}
+	defer file.Close()
+
+	var creds Credentials
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&creds)
+	if err != nil {
+		return "", "", err
+	}
+
+	return creds.Login.Username, creds.Login.Password, nil
+}
 
 func getSessionData() (string, string, error) {
 	resp, err := http.Get("https://www.parentsquare.com/sessions")
@@ -90,6 +116,18 @@ func login(authenticityToken, username, password string) error {
 }
 
 func main() {
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: go run main.go <path_to_json_file>")
+		return
+	}
+
+	jsonFile := os.Args[1]
+	username, password, err := parseCredentials(jsonFile)
+	if err != nil {
+		fmt.Println("Error parsing credentials:", err)
+		return
+	}
+
 	authenticityToken, cookie, err := getSessionData()
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -97,9 +135,6 @@ func main() {
 	}
 	fmt.Println("Authenticity Token:", authenticityToken)
 	fmt.Println("Cookie:", cookie)
-
-	username := "your_username"
-	password := "your_password"
 
 	err = login(authenticityToken, username, password)
 	if err != nil {
