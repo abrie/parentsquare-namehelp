@@ -9,6 +9,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"net/http/httputil"
 )
 
 type Credentials struct {
@@ -115,12 +116,26 @@ func login(authenticityToken, username, password, cookie string) error {
 	// Log the 'curl' CLI equivalent of the request
 	logCurlEquivalent("https://www.parentsquare.com/sessions", "POST", data.Encode(), cookie, headers)
 
+	// Dump the request
+	requestDump, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Request:\n%s\n", string(requestDump))
+
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+
+	// Dump the response
+	responseDump, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Response:\n%s\n", string(responseDump))
 
 	// Log the response code
 	fmt.Printf("Response Code: %d\n", resp.StatusCode)
