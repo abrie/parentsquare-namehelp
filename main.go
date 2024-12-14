@@ -109,6 +109,15 @@ func login(authenticityToken, username, password, cookie string) error {
 		fmt.Printf("Location Header: %s\n", location)
 	}
 
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	// Print the response text
+	fmt.Printf("Response Text: %s\n", string(body))
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("login failed with status code: %d", resp.StatusCode)
 	}
