@@ -62,7 +62,7 @@ func getSessionData() (string, string, error) {
 	return authenticityToken, cookie, nil
 }
 
-func login(authenticityToken, username, password string) error {
+func login(authenticityToken, username, password, cookie string) error {
 	data := url.Values{}
 	data.Set("utf8", "✓")
 	data.Set("authenticity_token", authenticityToken)
@@ -91,6 +91,7 @@ func login(authenticityToken, username, password string) error {
 	req.Header.Set("Sec-Fetch-User", "?1")
 	req.Header.Set("Upgrade-Insecure-Requests", "1")
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+	req.Header.Set("Cookie", cookie)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -136,7 +137,7 @@ func main() {
 	fmt.Println("Authenticity Token:", authenticityToken)
 	fmt.Println("Cookie:", cookie)
 
-	err = login(authenticityToken, username, password)
+	err = login(authenticityToken, username, password, cookie)
 	if err != nil {
 		fmt.Println("Login Error:", err)
 		return
