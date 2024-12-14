@@ -73,6 +73,15 @@ func login(authenticityToken, username, password string) error {
 	}
 	defer resp.Body.Close()
 
+	// Log the response code
+	fmt.Printf("Response Code: %d\n", resp.StatusCode)
+
+	// Show the contents of the response's 'Location' header, if present
+	location := resp.Header.Get("Location")
+	if location != "" {
+		fmt.Printf("Location Header: %s\n", location)
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("login failed with status code: %d", resp.StatusCode)
 	}
