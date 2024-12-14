@@ -62,6 +62,35 @@ func getSessionData() (string, string, error) {
 	return authenticityToken, cookie, nil
 }
 
+func logCurlEquivalent(url, method, data, cookie string, headers map[string]string) {
+	var curlCmd strings.Builder
+	curlCmd.WriteString("curl -X ")
+	curlCmd.WriteString(method)
+	curlCmd.WriteString(" '")
+	curlCmd.WriteString(url)
+	curlCmd.WriteString("'")
+
+	for key, value := range headers {
+		curlCmd.WriteString(" -H '")
+		curlCmd.WriteString(fmt.Sprintf("%s: %s", key, value))
+		curlCmd.WriteString("'")
+	}
+
+	if data != "" {
+		curlCmd.WriteString(" --data '")
+		curlCmd.WriteString(data)
+		curlCmd.WriteString("'")
+	}
+
+	if cookie != "" {
+		curlCmd.WriteString(" --cookie '")
+		curlCmd.WriteString(cookie)
+		curlCmd.WriteString("'")
+	}
+
+	fmt.Println(curlCmd.String())
+}
+
 func login(authenticityToken, username, password, cookie string) error {
 	data := url.Values{}
 	data.Set("utf8", "✓")
@@ -77,6 +106,14 @@ func login(authenticityToken, username, password, cookie string) error {
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Cookie", cookie)
+
+	headers := map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+		"Cookie":       cookie,
+	}
+
+	// Log the 'curl' CLI equivalent of the request
+	logCurlEquivalent("https://www.parentsquare.com/sessions", "POST", data.Encode(), cookie, headers)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

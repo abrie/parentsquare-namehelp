@@ -2,7 +2,7 @@
 
 ## Login Method
 
-This repository includes a method to log in to ParentSquare using an authenticity token, username, password, and cookie.
+This repository includes a method to log in to ParentSquare using an authenticity token, username, password, and cookie. The `login` method also logs out the 'curl' CLI equivalent of the request made, including URL, headers, and form data.
 
 ### Usage
 
