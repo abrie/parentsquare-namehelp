@@ -59,7 +59,9 @@ func getSessionData() (string, string, error) {
 		return "", "", fmt.Errorf("cookie not found")
 	}
 
-	return authenticityToken, cookie, nil
+	psCookies := extractPsCookies(resp.Cookies())
+
+	return authenticityToken, psCookies, nil
 }
 
 func extractPsCookies(cookies []*http.Cookie) string {
