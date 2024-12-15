@@ -20,3 +20,23 @@ This repository includes a method to log in to ParentSquare using an authenticit
   }
 }
 ```
+
+## Autocomplete Query Method
+
+This repository now includes a method to query the ParentSquare autocomplete service.
+
+### Usage
+
+1. Call the `queryAutocompleteService` method with the school ID, limit, chat, and query parameters.
+2. The method returns the response from the autocomplete service.
+
+### Example
+
+```go
+autocompleteResults, err := queryAutocompleteService("732", "25", "1", "cha", psCookies)
+if err != nil {
+    fmt.Println("Autocomplete Query Error:", err)
+    return
+}
+fmt.Println("Autocomplete Results:", autocompleteResults)
+```
