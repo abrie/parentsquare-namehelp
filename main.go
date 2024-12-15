@@ -109,6 +109,11 @@ func login(authenticityToken, username, password, cookie string) error {
 	// Print the length of response text
 	fmt.Printf("Response Text: %d\n", len(string(body)))
 
+	if resp.StatusCode == http.StatusFound {
+		fmt.Println("Login successful with redirect")
+		return nil
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("login failed with status code: %d", resp.StatusCode)
 	}
