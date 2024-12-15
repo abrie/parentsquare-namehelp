@@ -20,3 +20,21 @@ This repository includes a method to log in to ParentSquare using an authenticit
   }
 }
 ```
+
+### Detailed Logging
+
+The `login` method now includes detailed logging that mirrors Curl's `--trace-ascii` feature. This logging includes the request method, URL, headers, and body, as well as the response status, headers, and body.
+
+### Example Output
+
+```
+Request Method: POST
+Request URL: https://www.parentsquare.com/sessions
+Request Header: Content-Type: application/x-www-form-urlencoded
+Request Header: Cookie: <cookie_value>
+Request Body: utf8=✓&authenticity_token=<token_value>&session[email]=username_here&session[password]=password_here&commit=Sign+In
+Response Status: 200 OK
+Response Header: Content-Type: text/html; charset=utf-8
+Response Header: Set-Cookie: <cookie_value>
+Response Body: <html>...</html>
+```
