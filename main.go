@@ -78,30 +78,23 @@ func login(authenticityToken, username, password, cookie string) error {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Cookie", cookie)
 
-	client := &http.Client{}
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			// Log the redirect
+			fmt.Printf("Redirected to: %s\n", req.URL)
+			return http.ErrUseLastResponse
+		},
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	// Log the response code
-	fmt.Printf("Response Code: %d\n", resp.StatusCode)
-
-	// Show the contents of the response's 'Location' header, if present
-	location := resp.Header.Get("Location")
-	if location != "" {
-		fmt.Printf("Location Header: %s\n", location)
+	if resp.StatusCode == http.StatusFound {
+		fmt.Println("Login successful with redirect")
+		return nil
 	}
-
-	// Read the response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	// Print the length of response text
-	fmt.Printf("Response Text: %d\n", len(string(body)))
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("login failed with status code: %d", resp.StatusCode)
