@@ -1,14 +1,18 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"regexp"
 	"strings"
+	"syscall"
+	"time"
 )
 
 type Credentials struct {
@@ -16,6 +20,10 @@ type Credentials struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	} `json:"login"`
+}
+
+type Server struct {
+	psCookies map[string]string
 }
 
 func parseCredentials(filename string) (string, string, error) {
@@ -119,7 +127,7 @@ func login(authenticityToken, username, password string, cookies map[string]stri
 	return psCookies, nil
 }
 
-func queryAutocompleteService(schoolID, limit, chat, query string, cookies map[string]string) (string, error) {
+func (s *Server) queryAutocompleteService(schoolID, limit, chat, query string) (string, error) {
 	url := fmt.Sprintf("https://www.parentsquare.com/schools/%s/users/autocomplete?limit=%s&chat=%s&query=%s", schoolID, limit, chat, query)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -129,7 +137,7 @@ func queryAutocompleteService(schoolID, limit, chat, query string, cookies map[s
 
 	req.Header.Set("accept", "application/json")
 
-	for name, value := range cookies {
+	for name, value := range s.psCookies {
 		req.AddCookie(&http.Cookie{Name: name, Value: value})
 	}
 
@@ -150,6 +158,27 @@ func queryAutocompleteService(schoolID, limit, chat, query string, cookies map[s
 	}
 
 	return string(body), nil
+}
+
+func (s *Server) autocompleteHandler(w http.ResponseWriter, r *http.Request) {
+	schoolID := r.URL.Query().Get("school_id")
+	limit := r.URL.Query().Get("limit")
+	chat := r.URL.Query().Get("chat")
+	query := r.URL.Query().Get("query")
+
+	if schoolID == "" || limit == "" || chat == "" || query == "" {
+		http.Error(w, "Missing query parameters", http.StatusBadRequest)
+		return
+	}
+
+	results, err := s.queryAutocompleteService(schoolID, limit, chat, query)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Autocomplete Query Error: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(results))
 }
 
 func main() {
@@ -180,10 +209,31 @@ func main() {
 	}
 	fmt.Println("PS Cookies:", psCookies)
 
-	autocompleteResults, err := queryAutocompleteService("732", "25", "1", "cha", psCookies)
-	if err != nil {
-		fmt.Println("Autocomplete Query Error:", err)
-		return
+	server := &Server{psCookies: psCookies}
+
+	http.HandleFunc("/autocomplete", server.autocompleteHandler)
+
+	srv := &http.Server{
+		Addr: ":8080",
 	}
-	fmt.Println("Autocomplete Results:", autocompleteResults)
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("ListenAndServe(): %v\n", err)
+		}
+	}()
+
+	// Graceful shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	<-stop
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		fmt.Printf("Server Shutdown Failed:%+v", err)
+	}
+	fmt.Println("Server Exited Properly")
 }
