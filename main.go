@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -78,6 +79,20 @@ func login(authenticityToken, username, password, cookie string) error {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Cookie", cookie)
 
+	// Log request details
+	log.Printf("Request Method: %s\n", req.Method)
+	log.Printf("Request URL: %s\n", req.URL)
+	for name, values := range req.Header {
+		for _, value := range values {
+			log.Printf("Request Header: %s: %s\n", name, value)
+		}
+	}
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		return err
+	}
+	log.Printf("Request Body: %s\n", string(body))
+
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -85,23 +100,18 @@ func login(authenticityToken, username, password, cookie string) error {
 	}
 	defer resp.Body.Close()
 
-	// Log the response code
-	fmt.Printf("Response Code: %d\n", resp.StatusCode)
-
-	// Show the contents of the response's 'Location' header, if present
-	location := resp.Header.Get("Location")
-	if location != "" {
-		fmt.Printf("Location Header: %s\n", location)
+	// Log response details
+	log.Printf("Response Status: %s\n", resp.Status)
+	for name, values := range resp.Header {
+		for _, value := range values {
+			log.Printf("Response Header: %s: %s\n", name, value)
+		}
 	}
-
-	// Read the response body
-	body, err := io.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
-
-	// Print the length of response text
-	fmt.Printf("Response Text: %d\n", len(string(body)))
+	log.Printf("Response Body: %s\n", string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("login failed with status code: %d", resp.StatusCode)
