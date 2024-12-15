@@ -40,3 +40,31 @@ if err != nil {
 }
 fmt.Println("Autocomplete Results:", autocompleteResults)
 ```
+
+## Server Implementation
+
+This repository now includes an HTTP server to handle requests to the `/autocomplete` route.
+
+### Starting the Server
+
+1. Ensure you have a JSON file with your login credentials as shown in the example above.
+2. Run the server using the following command:
+
+```sh
+go run main.go <path_to_json_file>
+```
+
+Replace `<path_to_json_file>` with the path to your JSON file containing the login credentials.
+
+### Using the `/autocomplete` Route
+
+1. Start the server as described above.
+2. Send a GET request to the `/autocomplete` route with the required query parameters: `school_id`, `limit`, `chat`, and `query`.
+
+Example:
+
+```sh
+curl "http://localhost:8080/autocomplete?school_id=732&limit=25&chat=1&query=cha"
+```
+
+This will return the autocomplete results from the ParentSquare service.

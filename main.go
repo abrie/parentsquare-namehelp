@@ -54,10 +54,7 @@ func getSessionData() (string, map[string]string, error) {
 	}
 	authenticityToken := matches[1]
 
-	cookie := resp.Header.Get("Set-Cookie")
-	if cookie == "" {
-		return "", nil, fmt.Errorf("cookie not found")
-	}
+	
 
 	psCookies := extractPsCookies(resp.Cookies())
 
@@ -152,6 +149,23 @@ func queryAutocompleteService(schoolID, limit, chat, query string, cookies map[s
 	return string(body), nil
 }
 
+func autocompleteHandler(w http.ResponseWriter, r *http.Request) {
+	schoolID := r.URL.Query().Get("school_id")
+	limit := r.URL.Query().Get("limit")
+	chat := r.URL.Query().Get("chat")
+	query := r.URL.Query().Get("query")
+
+	// Assuming psCookies are available globally or through some other means
+	autocompleteResults, err := queryAutocompleteService(schoolID, limit, chat, query, psCookies)
+	if err != nil {
+		http.Error(w, "Autocomplete Query Error: " + err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(autocompleteResults))
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: go run main.go <path_to_json_file>")
@@ -180,10 +194,11 @@ func main() {
 	}
 	fmt.Println("PS Cookies:", psCookies)
 
-	autocompleteResults, err := queryAutocompleteService("732", "25", "1", "cha", psCookies)
+	http.HandleFunc("/autocomplete", autocompleteHandler)
+	port := ":8080"
+	fmt.Println("Server is running on port", port)
+	err = http.ListenAndServe(port, nil)
 	if err != nil {
-		fmt.Println("Autocomplete Query Error:", err)
-		return
+		fmt.Println("Server Error:", err)
 	}
-	fmt.Println("Autocomplete Results:", autocompleteResults)
 }
