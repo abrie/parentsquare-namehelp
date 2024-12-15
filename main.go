@@ -91,24 +91,6 @@ func login(authenticityToken, username, password, cookie string) error {
 	}
 	defer resp.Body.Close()
 
-	// Log the response code
-	fmt.Printf("Response Code: %d\n", resp.StatusCode)
-
-	// Show the contents of the response's 'Location' header, if present
-	location := resp.Header.Get("Location")
-	if location != "" {
-		fmt.Printf("Location Header: %s\n", location)
-	}
-
-	// Read the response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	// Print the length of response text
-	fmt.Printf("Response Text: %d\n", len(string(body)))
-
 	if resp.StatusCode == http.StatusFound {
 		fmt.Println("Login successful with redirect")
 		return nil
