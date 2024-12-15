@@ -35,28 +35,28 @@ func parseCredentials(filename string) (string, string, error) {
 	return creds.Login.Username, creds.Login.Password, nil
 }
 
-func getSessionData() (string, string, error) {
+func getSessionData() (string, map[string]string, error) {
 	resp, err := http.Get("https://www.parentsquare.com/sessions")
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 
 	re := regexp.MustCompile(`<form[^>]*action="/sessions"[^>]*>.*?<input[^>]*name="authenticity_token"[^>]*value="([^"]+)"`)
 	matches := re.FindStringSubmatch(string(body))
 	if len(matches) < 2 {
-		return "", "", fmt.Errorf("authenticity token not found")
+		return "", nil, fmt.Errorf("authenticity token not found")
 	}
 	authenticityToken := matches[1]
 
 	cookie := resp.Header.Get("Set-Cookie")
 	if cookie == "" {
-		return "", "", fmt.Errorf("cookie not found")
+		return "", nil, fmt.Errorf("cookie not found")
 	}
 
 	psCookies := extractPsCookies(resp.Cookies())
@@ -64,17 +64,17 @@ func getSessionData() (string, string, error) {
 	return authenticityToken, psCookies, nil
 }
 
-func extractPsCookies(cookies []*http.Cookie) string {
-	var psCookies []string
+func extractPsCookies(cookies []*http.Cookie) map[string]string {
+	psCookies := make(map[string]string)
 	for _, cookie := range cookies {
 		if strings.HasPrefix(cookie.Name, "ps_") {
-			psCookies = append(psCookies, cookie.String())
+			psCookies[cookie.Name] = cookie.Value
 		}
 	}
-	return strings.Join(psCookies, "; ")
+	return psCookies
 }
 
-func login(authenticityToken, username, password, cookie string) (string, error) {
+func login(authenticityToken, username, password string, cookies map[string]string) (map[string]string, error) {
 	data := url.Values{}
 	data.Set("utf8", "✓")
 	data.Set("authenticity_token", authenticityToken)
@@ -84,11 +84,13 @@ func login(authenticityToken, username, password, cookie string) (string, error)
 
 	req, err := http.NewRequest("POST", "https://www.parentsquare.com/sessions", strings.NewReader(data.Encode()))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Cookie", cookie)
+	for name, value := range cookies {
+		req.AddCookie(&http.Cookie{Name: name, Value: value})
+	}
 
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -99,7 +101,7 @@ func login(authenticityToken, username, password, cookie string) (string, error)
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -110,7 +112,7 @@ func login(authenticityToken, username, password, cookie string) (string, error)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("login failed with status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("login failed with status code: %d", resp.StatusCode)
 	}
 
 	psCookies := extractPsCookies(resp.Cookies())
@@ -130,15 +132,15 @@ func main() {
 		return
 	}
 
-	authenticityToken, cookie, err := getSessionData()
+	authenticityToken, cookies, err := getSessionData()
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
 	fmt.Println("Authenticity Token:", authenticityToken)
-	fmt.Println("Cookie:", cookie)
+	fmt.Println("Cookies:", cookies)
 
-	psCookies, err := login(authenticityToken, username, password, cookie)
+	psCookies, err := login(authenticityToken, username, password, cookies)
 	if err != nil {
 		fmt.Println("Login Error:", err)
 		return
