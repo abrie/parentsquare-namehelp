@@ -62,7 +62,17 @@ func getSessionData() (string, string, error) {
 	return authenticityToken, cookie, nil
 }
 
-func login(authenticityToken, username, password, cookie string) error {
+func extractPsCookies(cookies []*http.Cookie) string {
+	var psCookies []string
+	for _, cookie := range cookies {
+		if strings.HasPrefix(cookie.Name, "ps_") {
+			psCookies = append(psCookies, cookie.String())
+		}
+	}
+	return strings.Join(psCookies, "; ")
+}
+
+func login(authenticityToken, username, password, cookie string) (string, error) {
 	data := url.Values{}
 	data.Set("utf8", "✓")
 	data.Set("authenticity_token", authenticityToken)
@@ -72,7 +82,7 @@ func login(authenticityToken, username, password, cookie string) error {
 
 	req, err := http.NewRequest("POST", "https://www.parentsquare.com/sessions", strings.NewReader(data.Encode()))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -87,20 +97,22 @@ func login(authenticityToken, username, password, cookie string) error {
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusFound {
 		fmt.Println("Login successful with redirect")
-		return nil
+		psCookies := extractPsCookies(resp.Cookies())
+		return psCookies, nil
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("login failed with status code: %d", resp.StatusCode)
+		return "", fmt.Errorf("login failed with status code: %d", resp.StatusCode)
 	}
 
-	return nil
+	psCookies := extractPsCookies(resp.Cookies())
+	return psCookies, nil
 }
 
 func main() {
@@ -124,9 +136,10 @@ func main() {
 	fmt.Println("Authenticity Token:", authenticityToken)
 	fmt.Println("Cookie:", cookie)
 
-	err = login(authenticityToken, username, password, cookie)
+	psCookies, err := login(authenticityToken, username, password, cookie)
 	if err != nil {
 		fmt.Println("Login Error:", err)
 		return
 	}
+	fmt.Println("PS Cookies:", psCookies)
 }
