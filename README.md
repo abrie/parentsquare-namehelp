@@ -20,3 +20,25 @@ This repository includes a method to log in to ParentSquare using an authenticit
   }
 }
 ```
+
+## Autocomplete Query Method
+
+This repository now includes a method to query the autocomplete service using the provided cURL command as a model.
+
+### Usage
+
+1. Call the `queryAutocomplete` method with the cookie, CSRF token, and query string.
+2. The method constructs the request using the provided cURL command as a model.
+3. The method sends the request and returns the response.
+
+### Example Query
+
+```go
+query := "cha" // Example query
+response, err := queryAutocomplete(cookie, csrfToken, query)
+if err != nil {
+    fmt.Println("Autocomplete Query Error:", err)
+    return
+}
+fmt.Println("Autocomplete Response:", response)
+```

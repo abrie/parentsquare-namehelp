@@ -103,6 +103,46 @@ func login(authenticityToken, username, password, cookie string) error {
 	return nil
 }
 
+func queryAutocomplete(cookie, csrfToken, query string) (string, error) {
+	url := fmt.Sprintf("https://www.parentsquare.com/schools/732/users/autocomplete?limit=25&chat=1&query=%s", url.QueryEscape(query))
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("accept", "application/json, text/javascript, */*; q=0.01")
+	req.Header.Set("accept-language", "en")
+	req.Header.Set("cache-control", "no-cache")
+	req.Header.Set("pragma", "no-cache")
+	req.Header.Set("priority", "u=1, i")
+	req.Header.Set("referer", "https://www.parentsquare.com/schools/732/users/24399867/chats/new?private=true")
+	req.Header.Set("sec-ch-ua", `"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"`)
+	req.Header.Set("sec-ch-ua-mobile", "?0")
+	req.Header.Set("sec-ch-ua-platform", "macOS")
+	req.Header.Set("sec-fetch-dest", "empty")
+	req.Header.Set("sec-fetch-mode", "cors")
+	req.Header.Set("sec-fetch-site", "same-origin")
+	req.Header.Set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+	req.Header.Set("x-csrf-token", csrfToken)
+	req.Header.Set("x-requested-with", "XMLHttpRequest")
+	req.Header.Set("Cookie", cookie)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: go run main.go <path_to_json_file>")
@@ -129,4 +169,12 @@ func main() {
 		fmt.Println("Login Error:", err)
 		return
 	}
+
+	query := "cha" // Example query
+	response, err := queryAutocomplete(cookie, authenticityToken, query)
+	if err != nil {
+		fmt.Println("Autocomplete Query Error:", err)
+		return
+	}
+	fmt.Println("Autocomplete Response:", response)
 }
