@@ -127,20 +127,7 @@ func queryAutocompleteService(schoolID, limit, chat, query string, cookies map[s
 		return "", err
 	}
 
-	req.Header.Set("accept", "application/json, text/javascript, */*; q=0.01")
-	req.Header.Set("accept-language", "en")
-	req.Header.Set("cache-control", "no-cache")
-	req.Header.Set("pragma", "no-cache")
-	req.Header.Set("priority", "u=1, i")
-	req.Header.Set("referer", "https://www.parentsquare.com/schools/732/users/24399867/chats/new?private=true")
-	req.Header.Set("sec-ch-ua", `"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"`)
-	req.Header.Set("sec-ch-ua-mobile", "?0")
-	req.Header.Set("sec-ch-ua-platform", "macOS")
-	req.Header.Set("sec-fetch-dest", "empty")
-	req.Header.Set("sec-fetch-mode", "cors")
-	req.Header.Set("sec-fetch-site", "same-origin")
-	req.Header.Set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
-	req.Header.Set("x-requested-with", "XMLHttpRequest")
+	req.Header.Set("accept", "application/json")
 
 	for name, value := range cookies {
 		req.AddCookie(&http.Cookie{Name: name, Value: value})
