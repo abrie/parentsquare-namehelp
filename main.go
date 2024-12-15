@@ -77,8 +77,12 @@ func login(authenticityToken, username, password, cookie string) error {
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Cookie", cookie)
+	req.Header.Set("Referer", "https://www.parentsquare.com/sessions")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
 
-	client := &http.Client{}
+	client := &http.Client{
+		CheckRedirect: nil,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
@@ -103,7 +107,7 @@ func login(authenticityToken, username, password, cookie string) error {
 	// Print the length of response text
 	fmt.Printf("Response Text: %d\n", len(string(body)))
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusFound {
 		return fmt.Errorf("login failed with status code: %d", resp.StatusCode)
 	}
 
