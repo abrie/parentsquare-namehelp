@@ -93,6 +93,9 @@ func login(authenticityToken, username, password, cookie string) error {
 	}
 	log.Printf("Request Body: %s\n", string(body))
 
+	// Ensure request body is read only once and reused
+	req.Body = io.NopCloser(strings.NewReader(data.Encode()))
+
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
