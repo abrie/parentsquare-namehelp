@@ -21,50 +21,54 @@ function App() {
 	}, [query, schoolId, limit, chat]);
 
 	return (
-		<div>
-			<div>
-				<label>
+		<div className="p-4">
+			<div className="mb-4">
+				<label className="block text-sm font-medium text-gray-700">
 					School ID:
 					<input
 						type="number"
 						value={schoolId}
 						onChange={(e) => setSchoolId(Number(e.target.value))}
+						className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
 					/>
 				</label>
 			</div>
-			<div>
-				<label>
+			<div className="mb-4">
+				<label className="block text-sm font-medium text-gray-700">
 					Limit:
 					<input
 						type="number"
 						value={limit}
 						onChange={(e) => setLimit(Number(e.target.value))}
+						className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
 					/>
 				</label>
 			</div>
-			<div>
-				<label>
+			<div className="mb-4">
+				<label className="block text-sm font-medium text-gray-700">
 					Chat:
 					<input
 						type="number"
 						value={chat}
 						onChange={(e) => setChat(Number(e.target.value))}
+						className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
 					/>
 				</label>
 			</div>
-			<div>
-				<label>
+			<div className="mb-4">
+				<label className="block text-sm font-medium text-gray-700">
 					Query:
 					<input
 						type="text"
 						value={query}
 						onChange={(e) => setQuery(e.target.value)}
+						className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
 					/>
 				</label>
 			</div>
 			<div>
-				<h3>Results:</h3>
-				<pre>{results && JSON.stringify(results, null, 2)}</pre>
+				<h3 className="text-lg font-medium text-gray-900">Results:</h3>
+				<pre className="mt-2 p-4 bg-gray-100 rounded-md">{results && JSON.stringify(results, null, 2)}</pre>
 			</div>
 		</div>
 	);
