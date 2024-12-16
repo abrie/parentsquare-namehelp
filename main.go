@@ -211,7 +211,7 @@ func main() {
 
 	server := &Server{psCookies: psCookies}
 
-	http.HandleFunc("/autocomplete", server.autocompleteHandler)
+	http.HandleFunc("/api/autocomplete", server.autocompleteHandler)
 
 	srv := &http.Server{
 		Addr: ":8080",
