@@ -1,66 +1,50 @@
-# parentsquare-namehelp
+# React + TypeScript + Vite
 
-## Login Method
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-This repository includes a method to log in to ParentSquare using an authenticity token, username, password, and cookie.
+Currently, two official plugins are available:
 
-### Usage
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-1. Retrieve the authenticity token and cookie from the sessions page.
-2. Call the `login` method with the authenticity token, username, password, and cookie.
-3. Parse the username and password from a JSON file specified by a command line argument.
+## Expanding the ESLint configuration
 
-### Example JSON File
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-```json
-{
-  "login": {
-    "username": "username_here",
-    "password": "password_here"
-  }
-}
+- Configure the top-level `parserOptions` property like this:
+
+```js
+export default tseslint.config({
+  languageOptions: {
+    // other options...
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+})
 ```
 
-## Autocomplete Query Method
+- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
+- Optionally add `...tseslint.configs.stylisticTypeChecked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
 
-This repository now includes a method to query the ParentSquare autocomplete service.
+```js
+// eslint.config.js
+import react from 'eslint-plugin-react'
 
-### Usage
-
-1. Call the `queryAutocompleteService` method with the school ID, limit, chat, and query parameters.
-2. The method returns the response from the autocomplete service.
-
-### Example
-
-```go
-autocompleteResults, err := queryAutocompleteService("732", "25", "1", "cha", psCookies)
-if err != nil {
-    fmt.Println("Autocomplete Query Error:", err)
-    return
-}
-fmt.Println("Autocomplete Results:", autocompleteResults)
-```
-
-## HTTP Server
-
-This repository now includes an HTTP server that provides a route to the autocomplete method.
-
-### Running the Server
-
-1. Ensure you have a JSON file with your ParentSquare credentials (username and password).
-2. Run the server using the following command:
-
-```sh
-go run main.go <path_to_json_file>
-```
-
-### Example Usage of the `/autocomplete` Route
-
-1. Start the server as described above.
-2. Make a GET request to the `/autocomplete` route with the required query parameters (`school_id`, `limit`, `chat`, `query`).
-
-Example:
-
-```sh
-curl "http://localhost:8080/autocomplete?school_id=732&limit=25&chat=1&query=cha"
+export default tseslint.config({
+  // Set the react version
+  settings: { react: { version: '18.3' } },
+  plugins: {
+    // Add the react plugin
+    react,
+  },
+  rules: {
+    // other rules...
+    // Enable its recommended rules
+    ...react.configs.recommended.rules,
+    ...react.configs['jsx-runtime'].rules,
+  },
+})
 ```
