@@ -11,7 +11,16 @@ function App() {
 					`/api/autocomplete?query=${query}`,
 				);
 				const data = await response.json();
-				setResults(data);
+
+				const processedData = data.map((item) => {
+					const role = item[0].role[0] === "" ? `Parent of ${item[0].role[1]}` : item[0].role[0];
+					return {
+						name: item[0].name,
+						role: role,
+					};
+				});
+
+				setResults(processedData);
 			};
 			fetchData();
 		}
@@ -31,7 +40,13 @@ function App() {
 			</div>
 			<div>
 				<h3>Results:</h3>
-				<pre>{results && JSON.stringify(results, null, 2)}</pre>
+				<ul>
+					{results && results.map((result, index) => (
+						<li key={index}>
+							{result.name} - {result.role}
+						</li>
+					))}
+				</ul>
 			</div>
 		</div>
 	);
