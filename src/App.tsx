@@ -11,7 +11,13 @@ function App() {
 					`/api/autocomplete?query=${query}`,
 				);
 				const data = await response.json();
-				setResults(data);
+				const processedData = data.map((resultGroup) =>
+					resultGroup.map((result) => ({
+						name: result.name,
+						role: result.role.join(", "),
+					}))
+				);
+				setResults(processedData);
 			};
 			fetchData();
 		}
@@ -31,7 +37,14 @@ function App() {
 			</div>
 			<div>
 				<h3>Results:</h3>
-				<pre>{results && JSON.stringify(results, null, 2)}</pre>
+					<ul>
+						{results && results.flat().map((result, index) => (
+							<li key={index}>
+								<strong>Name:</strong> {result.name} <br />
+								<strong>Role:</strong> {result.role}
+							</li>
+						))}
+					</ul>
 			</div>
 		</div>
 	);

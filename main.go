@@ -200,8 +200,44 @@ func (s *Server) autocompleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var rawResults [][]struct {
+		ID         int               `json:"id"`
+		FirstName  string            `json:"first_name"`
+		LastName   string            `json:"last_name"`
+		Name       string            `json:"name"`
+		Role       []string          `json:"role"`
+		OfficeHour map[string]string `json:"office_hour"`
+	}
+
+	err = json.Unmarshal([]byte(results), &rawResults)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error parsing autocomplete results: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	type ProcessedResult struct {
+		Name string `json:"name"`
+		Role string `json:"role"`
+	}
+
+	var processedResults []ProcessedResult
+	for _, resultGroup := range rawResults {
+		for _, result := range resultGroup {
+			processedResults = append(processedResults, ProcessedResult{
+				Name: result.Name,
+				Role: strings.Join(result.Role, ", "),
+			})
+		}
+	}
+
+	processedResultsJSON, err := json.Marshal(processedResults)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error marshaling processed results: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(results))
+	w.Write(processedResultsJSON)
 }
 
 func main() {
