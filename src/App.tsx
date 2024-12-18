@@ -7,15 +7,13 @@ function App() {
 	useEffect(() => {
 		if (query !== "") {
 			const fetchData = async () => {
-				const response = await fetch(
-					`/api/autocomplete?query=${query}`,
-				);
+				const response = await fetch(`/api/autocomplete?query=${query}`);
 				const data = await response.json();
 
-				const processedData = data.map((item) => {
-					const role = item[0].role[0] === "" ? `Parent of ${item[0].role[1]}` : item[0].role[0];
+				const processedData = data[0].map((item) => {
+					const role = item.role[0] === "" ? item.role[1] : item.role[0];
 					return {
-						name: item[0].name,
+						name: item.name,
 						role: role,
 					};
 				});
@@ -41,11 +39,12 @@ function App() {
 			<div>
 				<h3>Results:</h3>
 				<ul>
-					{results && results.map((result, index) => (
-						<li key={index}>
-							{result.name} - {result.role}
-						</li>
-					))}
+					{results &&
+						results.map((result, index) => (
+							<li key={index}>
+								{result.name} - {result.role}
+							</li>
+						))}
 				</ul>
 			</div>
 		</div>
