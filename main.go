@@ -24,9 +24,9 @@ type Credentials struct {
 
 type Config struct {
 	Autocomplete struct {
-		SchoolID int `json:"school_id"`
-		Limit    int `json:"limit"`
-		Chat     int `json:"chat"`
+		SchoolID string `json:"school_id"`
+		Limit    string `json:"limit"`
+		Chat     string `json:"chat"`
 	} `json:"autocomplete"`
 }
 
@@ -194,7 +194,7 @@ func (s *Server) autocompleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results, err := s.queryAutocompleteService(fmt.Sprintf("%d", s.config.Autocomplete.SchoolID), fmt.Sprintf("%d", s.config.Autocomplete.Limit), fmt.Sprintf("%d", s.config.Autocomplete.Chat), query)
+	results, err := s.queryAutocompleteService(s.config.Autocomplete.SchoolID, s.config.Autocomplete.Limit, s.config.Autocomplete.Chat, query)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Autocomplete Query Error: %v", err), http.StatusInternalServerError)
 		return
