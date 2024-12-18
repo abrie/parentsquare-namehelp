@@ -22,8 +22,17 @@ type Credentials struct {
 	} `json:"login"`
 }
 
+type Config struct {
+	Autocomplete struct {
+		SchoolID string `json:"school_id"`
+		Limit    string `json:"limit"`
+		Chat     string `json:"chat"`
+	} `json:"autocomplete"`
+}
+
 type Server struct {
 	psCookies map[string]string
+	config    Config
 }
 
 func parseCredentials(filename string) (string, string, error) {
@@ -41,6 +50,23 @@ func parseCredentials(filename string) (string, string, error) {
 	}
 
 	return creds.Login.Username, creds.Login.Password, nil
+}
+
+func parseConfig(filename string) (Config, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return Config{}, err
+	}
+	defer file.Close()
+
+	var config Config
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&config)
+	if err != nil {
+		return Config{}, err
+	}
+
+	return config, nil
 }
 
 func getSessionData() (string, map[string]string, error) {
@@ -161,17 +187,14 @@ func (s *Server) queryAutocompleteService(schoolID, limit, chat, query string) (
 }
 
 func (s *Server) autocompleteHandler(w http.ResponseWriter, r *http.Request) {
-	schoolID := r.URL.Query().Get("school_id")
-	limit := r.URL.Query().Get("limit")
-	chat := r.URL.Query().Get("chat")
 	query := r.URL.Query().Get("query")
 
-	if schoolID == "" || limit == "" || chat == "" || query == "" {
-		http.Error(w, "Missing query parameters", http.StatusBadRequest)
+	if query == "" {
+		http.Error(w, "Missing query parameter", http.StatusBadRequest)
 		return
 	}
 
-	results, err := s.queryAutocompleteService(schoolID, limit, chat, query)
+	results, err := s.queryAutocompleteService(s.config.Autocomplete.SchoolID, s.config.Autocomplete.Limit, s.config.Autocomplete.Chat, query)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Autocomplete Query Error: %v", err), http.StatusInternalServerError)
 		return
@@ -182,15 +205,23 @@ func (s *Server) autocompleteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run main.go <path_to_json_file>")
+	if len(os.Args) < 3 {
+		fmt.Println("Usage: go run main.go <path_to_credentials_json_file> <path_to_config_json_file>")
 		return
 	}
 
-	jsonFile := os.Args[1]
-	username, password, err := parseCredentials(jsonFile)
+	credentialsFile := os.Args[1]
+	configFile := os.Args[2]
+
+	username, password, err := parseCredentials(credentialsFile)
 	if err != nil {
 		fmt.Println("Error parsing credentials:", err)
+		return
+	}
+
+	config, err := parseConfig(configFile)
+	if err != nil {
+		fmt.Println("Error parsing config:", err)
 		return
 	}
 
@@ -209,7 +240,7 @@ func main() {
 	}
 	fmt.Println("PS Cookies:", psCookies)
 
-	server := &Server{psCookies: psCookies}
+	server := &Server{psCookies: psCookies, config: config}
 
 	http.HandleFunc("/api/autocomplete", server.autocompleteHandler)
 
