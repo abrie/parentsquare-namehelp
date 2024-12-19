@@ -1,28 +1,47 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 function App() {
 	const [query, setQuery] = useState("");
 	const [results, setResults] = useState(null);
+	const [loading, setLoading] = useState(false);
+
+	const debounce = (func, delay) => {
+		let timeoutId;
+		return (...args) => {
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+			}
+			timeoutId = setTimeout(() => {
+				func(...args);
+			}, delay);
+		};
+	};
+
+	const debouncedFetchData = useCallback(
+		debounce(async (query) => {
+			setLoading(true);
+			const response = await fetch(`/api/autocomplete?query=${query}`);
+			const data = await response.json();
+
+			const processedData = data[0].map((item) => {
+				const role = item.role[0] === "" ? item.role[1] : item.role[0];
+				return {
+					name: item.name,
+					role: role,
+				};
+			});
+
+			setResults(processedData);
+			setLoading(false);
+		}, 300),
+		[]
+	);
 
 	useEffect(() => {
 		if (query !== "") {
-			const fetchData = async () => {
-				const response = await fetch(`/api/autocomplete?query=${query}`);
-				const data = await response.json();
-
-				const processedData = data[0].map((item) => {
-					const role = item.role[0] === "" ? item.role[1] : item.role[0];
-					return {
-						name: item.name,
-						role: role,
-					};
-				});
-
-				setResults(processedData);
-			};
-			fetchData();
+			debouncedFetchData(query);
 		}
-	}, [query]);
+	}, [query, debouncedFetchData]);
 
 	return (
 		<div>
@@ -38,14 +57,18 @@ function App() {
 			</div>
 			<div>
 				<h3>Results:</h3>
-				<ul>
-					{results &&
-						results.map((result, index) => (
-							<li key={index}>
-								{result.name} - {result.role}
-							</li>
-						))}
-				</ul>
+				{loading ? (
+					<p>Loading...</p>
+				) : (
+					<ul>
+						{results &&
+							results.map((result, index) => (
+								<li key={index}>
+									{result.name} - {result.role}
+								</li>
+							))}
+					</ul>
+				)}
 			</div>
 		</div>
 	);
