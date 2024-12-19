@@ -154,6 +154,7 @@ func login(authenticityToken, username, password string, cookies map[string]stri
 }
 
 func (s *Server) queryAutocompleteService(schoolID, limit, chat, query string) (string, error) {
+	fmt.Printf("Starting autocomplete query for: %s\n", query) // Pff3e
 	url := fmt.Sprintf("https://www.parentsquare.com/schools/%s/users/autocomplete?limit=%s&chat=%s&query=%s", schoolID, limit, chat, query)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -183,6 +184,7 @@ func (s *Server) queryAutocompleteService(schoolID, limit, chat, query string) (
 		return "", fmt.Errorf("query failed with status code: %d", resp.StatusCode)
 	}
 
+	fmt.Printf("Completed autocomplete query for: %s\n", query) // Pff3e
 	return string(body), nil
 }
 
@@ -194,12 +196,14 @@ func (s *Server) autocompleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Printf("Received autocomplete query: %s\n", query) // P2687
 	results, err := s.queryAutocompleteService(s.config.Autocomplete.SchoolID, s.config.Autocomplete.Limit, s.config.Autocomplete.Chat, query)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Autocomplete Query Error: %v", err), http.StatusInternalServerError)
 		return
 	}
 
+	fmt.Printf("Autocomplete results for query '%s': %s\n", query, results) // P2687
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(results))
 }
